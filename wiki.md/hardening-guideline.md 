@@ -44,6 +44,655 @@ https://madaidans-insecurities.github.io/guides/linux-hardening.html
 crowdsec, spoofdpi, amneziaWG , EBTABLES, ebpf & xdp , thor ( yara detections ), automating ipset blacklist , setting up bridged vlan
 debloat 2 reduce attack surface .. etc
 
+
+
+## 1. Kernel Hardening [(Section 2)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#kernel)
+
+### 1.1. Sysctl Settings (Section [2.2](https://madaidans-insecurities.github.io/guides/linux-hardening.html#sysctl), [10](https://madaidans-insecurities.github.io/guides/linux-hardening.html#tcp-timestamps), [12](https://madaidans-insecurities.github.io/guides/linux-hardening.html#core-dumps-sysctl), [13](https://madaidans-insecurities.github.io/guides/linux-hardening.html#swap), [16](https://madaidans-insecurities.github.io/guides/linux-hardening.html#ipv6-privacy))
+
+Create/edit a file like [`/etc/sysctl.d/99-hardening.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/sysctl.d/99-security.conf) and add the following settings. Apply with `sudo sysctl --system`.
+
+```ini
+# Kernel security settings
+kernel.core_pattern=|/bin/false
+kernel.dmesg_restrict = 1
+kernel.io_uring_disabled = 2 # Extra hardening: Disable io_uring
+kernel.kexec_load_disabled = 1
+kernel.kptr_restrict = 2
+kernel.module_signature_enforcing = 1
+kernel.perf_event_paranoid = 4 # Stricter than guide (disables all perf events)
+kernel.printk = 3 3 3 3
+kernel.sysrq = 0 # Stricter than guide (disables SysRq completely)
+kernel.unprivileged_bpf_disabled = 1
+# kernel.unprivileged_userns_clone = 1 # Kept at 1 for Flatpak compatibility (Deviation from guide)
+kernel.yama.ptrace_scope = 3 # Stricter than guide (disables ptrace completely)
+
+# Memory and VM settings
+vm.mmap_rnd_bits = 32
+vm.mmap_rnd_compat_bits = 16
+vm.unprivileged_userfaultfd = 0
+vm.swappiness = 1 # Reduce swap usage
+
+# Filesystem protection
+fs.binfmt_misc.status = 0
+fs.protected_fifos = 2
+fs.protected_hardlinks = 1
+fs.protected_regular = 2
+fs.protected_symlinks = 1
+fs.suid_dumpable = 0
+
+# Network security - IPv4
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.log_martians = 1 # Extra hardening: Log martian packets
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.default.log_martians = 1 # Extra hardening: Log martian packets
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.icmp_echo_ignore_all = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1 # Extra hardening
+net.ipv4.tcp_dsack = 0
+net.ipv4.tcp_fack = 0
+net.ipv4.tcp_rfc1337 = 1
+net.ipv4.tcp_sack = 0
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_timestamps = 0 # Mitigate time attacks
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_echo_ignore_all = 1
+
+# Network security - IPv6 (Note: ipv6.disable=1 boot param is also used)
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.all.use_tempaddr = 2 # Enable privacy extensions (if IPv6 wasn't disabled)
+net.ipv6.conf.default.accept_ra = 0
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv6.conf.default.accept_source_route = 0
+net.ipv6.conf.default.use_tempaddr = 2 # Enable privacy extensions (if IPv6 wasn't disabled)
+
+# Network core settings
+net.core.bpf_jit_harden = 2
+
+# Device settings
+dev.tty.ldisc_autoload = 0
+```
+**Note:** `kernel.unprivileged_userns_clone=1` is kept intentionally for Flatpak compatibility, deviating from the guide's recommendation of `0`.
+
+### 1.2. Boot Parameters (Section [2.3](https://madaidans-insecurities.github.io/guides/linux-hardening.html#boot-parameters), [2.5.1](https://madaidans-insecurities.github.io/guides/linux-hardening.html#kasr-boot-parameters), [2.6](https://madaidans-insecurities.github.io/guides/linux-hardening.html#other-kernel-pointer-leaks), [18.2](https://madaidans-insecurities.github.io/guides/linux-hardening.html#rdrand), [21.6](https://madaidans-insecurities.github.io/guides/linux-hardening.html#dma-attacks))
+
+Edit [`/etc/default/grub`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/default/grub#) and add the following to `GRUB_CMDLINE_LINUX` (adapt CPU mitigations and other params as needed). Regenerate GRUB config afterwards (`sudo grub2-mkconfig -o /etc/grub2.cfg`).
+
+```bash
+# Example GRUB_CMDLINE_LINUX additions:
+# Base Hardening
+slab_nomerge init_on_alloc=1 init_on_free=1 page_alloc.shuffle=1 pti=on vsyscall=none debugfs=off oops=panic module.sig_enforce=1 lockdown=confidentiality quiet loglevel=0 randomize_kstack_offset=on rd.shell=0 rd.emergency=halt
+
+# CPU Mitigations (Example - Research your specific CPU)
+spectre_v2=on spec_store_bypass_disable=on tsx=off tsx_async_abort=full,nosmt mds=full,nosmt l1tf=full,force nosmt=force kvm.nx_huge_pages=force # ... add others like spectre_bhi, l1d_flush etc.
+
+# IOMMU (DMA Protection)
+intel_iommu=on # or amd_iommu=on
+iommu=force # Optional, stricter IOMMU
+iommu.strict=1 # Optional, stricter IOMMU
+iommu.passthrough=0 # Optional, stricter IOMMU
+efi=disable_early_pci_dma # Fix IOMMU hole during early boot
+
+# Other Hardening
+ipv6.disable=1 # Disable IPv6 stack
+random.trust_cpu=off # Distrust CPU RDRAND instruction
+ia32_emulation=0 # Disables 32 bit emulation on Linux kernel (less atack surface)
+```
+
+### 1.3. hidepid Mount Option [(Section 2.4)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#hidepid)
+
+Edit [`/etc/fstab`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/fstab) and ensure the `/proc` line uses `hidepid=2`.
+
+```fstab
+# /proc line in /etc/fstab
+proc /proc proc nosuid,nodev,noexec,hidepid=2,gid=proc 0 0
+```
+
+The guide also says that if you are using systemd, you need to allow `systemd-logind` access by creating `/etc/systemd/system/systemd-logind.service.d/hidepid.conf` and writing this:
+```ini
+[Service]
+SupplementaryGroups=proc
+```
+
+But I personally never experienced any problem without doing this, so you can skip it.
+
+### 1.4. Kernel Module Blacklisting (Section [2.5.2](https://madaidans-insecurities.github.io/guides/linux-hardening.html#kasr-kernel-modules), [21.6](https://madaidans-insecurities.github.io/guides/linux-hardening.html#dma-attacks), Extras)
+
+Create a file like [`/etc/modprobe.d/blacklist-modules.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/modprobe.d/blacklist-modules.conf) and add rules using `install modulename /bin/false` to prevent loading unnecessary or potentially vulnerable modules.
+
+```bash
+# Uncommon Network protocols
+install dccp /bin/false
+install sctp /bin/false
+install rds /bin/false
+install tipc /bin/false
+install n-hdlc /bin/false
+install ax25 /bin/false
+install netrom /bin/false
+install x25 /bin/false
+install rose /bin/false
+install decnet /bin/false
+install econet /bin/false
+install af_802154 /bin/false
+install ipx /bin/false
+install appletalk /bin/false
+install psnap /bin/false
+install p8023 /bin/false
+install p8022 /bin/false
+install can /bin/false
+install atm /bin/false
+
+# FireWire and Thunderbolt interfaces (DMA risk)
+install firewire-core /bin/false
+install firewire_core /bin/false
+install firewire-ohci /bin/false
+install firewire_ohci /bin/false
+install firewire_sbp2 /bin/false
+install firewire-sbp2 /bin/false
+install firewire-net /bin/false
+install thunderbolt /bin/false
+install ohci1394 /bin/false
+install sbp2 /bin/false
+install dv1394 /bin/false
+install raw1394 /bin/false
+install video1394 /bin/false
+
+# Uncommon/Legacy Filesystems
+install cramfs /bin/false
+install freevxfs /bin/false
+install jffs2 /bin/false
+install hfs /bin/false
+install hfsplus /bin/false
+install squashfs /bin/false # Note: May be needed for Live USBs or some installers
+install udf /bin/false # Filesystem for optical media
+install cifs /bin/false # Network FS (SMB/CIFS)
+install nfs /bin/false # Network FS (NFS Client)
+install nfsv3 /bin/false # Network FS (NFSv3 Client)
+install nfsv4 /bin/false # Network FS (NFSv4 Client)
+install ksmbd /bin/false # Kernel SMB Server
+install gfs2 /bin/false # Clustered FS
+install reiserfs /bin/false
+install kafs /bin/false
+install orangefs /bin/false
+install 9p /bin/false # Plan 9 FS
+install adfs /bin/false
+install affs /bin/false
+install afs /bin/false
+install befs /bin/false
+install ceph /bin/false # Distributed FS
+install coda /bin/false # Distributed FS
+install ecryptfs /bin/false # Stacked crypto FS (LUKS is used instead)
+install erofs /bin/false
+install jfs /bin/false
+install minix /bin/false
+install netfs /bin/false
+install nilfs2 /bin/false
+install ocfs2 /bin/false # Clustered FS
+install romfs /bin/false
+install ubifs /bin/false
+install zonefs /bin/false
+install sysv /bin/false
+install ufs /bin/false
+
+# Video devices (Testing/Legacy)
+install vivid /bin/false # Kernel testing driver
+install uvcvideo /bin/false # Disables generic USB Video Class (Webcams)
+
+# GNSS (GPS) devices
+install gnss /bin/false
+install gnss-mtk /bin/false
+install gnss-serial /bin/false
+install gnss-sirf /bin/false
+install gnss-usb /bin/false
+install gnss-ubx /bin/false
+
+# Bluetooth
+install bluetooth /bin/false
+install btusb /bin/false
+
+# Wireless drivers
+install ath_pci /bin/false # Example: Atheros PCI wifi driver
+
+# Optical drives (CD/DVD)
+install cdrom /bin/false
+install sr_mod /bin/false
+
+# Legacy Framebuffer drivers
+install cyber2000fb /bin/false
+install cyblafb /bin/false
+install gx1fb /bin/false
+install hgafb /bin/false
+install kyrofb /bin/false
+install lxfb /bin/false
+install matroxfb_base /bin/false
+install neofb /bin/false
+install nvidiafb /bin/false
+install pm2fb /bin/false
+install s1d13xxxfb /bin/false
+install sisfb /bin/false
+install tdfxfb /bin/false
+install vesafb /bin/false # VESA BIOS Extension Framebuffer (Legacy BIOS)
+install vfb /bin/false    # Virtual Framebuffer
+install vt8623fb /bin/false
+install udlfb /bin/false   # DisplayLink USB Framebuffer
+
+# Floppy Disk Drive support
+install floppy /bin/false
+
+# Parallel Port support
+install parport /bin/false
+install parport_pc /bin/false
+install ppdev /bin/false # Direct parallel port access
+
+# Infrared (IrDA) support
+install irda /bin/false
+install ircomm /bin/false
+install irnet /bin/false
+install irlan /bin/false
+install irtty_sir /bin/false
+
+# ISDN support
+install isdn /bin/false
+
+# PCMCIA/CardBus support
+install pcmcia /bin/false
+install pcmcia_core /bin/false
+install yenta_socket /bin/false
+
+# Kernel NFS Server support
+install nfsd /bin/false
+
+# InfiniBand and RDMA modules
+install ib_core /bin/false
+install rdma_ucm /bin/false
+install rdma_cm /bin/false
+install mlx4_core /bin/false # Mellanox InfiniBand/Ethernet HCA support
+install mlx5_core /bin/false # Mellanox InfiniBand/Ethernet HCA support
+
+# Netfilter Conntrack Helpers (May break some protocols like FTP/SIP if needed)
+install nf_conntrack_ftp /bin/false
+install nf_conntrack_irc /bin/false
+install nf_conntrack_sip /bin/false
+install nf_conntrack_h323 /bin/false
+install nf_conntrack_pptp /bin/false
+install nf_conntrack_tftp /bin/false
+install nf_conntrack_netbios_ns /bin/false
+
+# Specific Input Devices (Only if hardware is unused)
+install wacom /bin/false # Wacom tablet support
+install lirc_dev /bin/false # Infrared remote control support
+install saa7134 /bin/false # Philips SAA713x based TV cards
+install cx88xx /bin/false # Conexant CX2388x based TV cards
+install hid_multitouch /bin/false # Multitouch HID input devices
+
+# MACsec (IEEE 802.1AE) support
+install macsec /bin/false
+```
+**Note:** Rebuild initramfs (`sudo dracut -f` or `sudo update-initramfs -u`) after modifying module blacklists if unsure.
+
+---
+
+## 2. Root Account Hardening [(Section 8)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#root)
+
+### 2.1. Restricting `su` [(Section 8.2)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#restricting-su)
+
+Edit [`/etc/pam.d/su`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/pam.d/su) and [`/etc/pam.d/su-l`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/pam.d/su-l) and add/ensure the following line is present and uncommented to restrict `su` usage to members of the `wheel` group.
+
+```ini
+auth            required        pam_wheel.so use_uid
+```
+(This typically doesn't affect standard Fedora setups where the main user is already in `wheel` and uses `sudo`).
+
+### 2.2. Increasing Password Hashing Rounds [(Section 8.5)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#increase-hashing-rounds)
+
+Edit [`/etc/pam.d/passwd`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/pam.d/passwd) and modify the `pam_unix.so` line to include `rounds=N`. A value of `65536` is a good starting point, but i personally set it to `500000`.
+
+```ini
+password required pam_unix.so sha512 shadow nullok rounds=65536
+```
+>[!IMPORTANT]
+> After changing this, users must reset their passwords (`passwd username`) for the new round count to take effect on their stored hash.
+
+## 2.3. Rstricting Xorg root access [(Section 8.6)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#restricting-xorg)
+
+Create if the file not exists [`/etc/X11/Xwrapper.config`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/X11/Xwrapper.config), and add inside:
+
+```
+needs_root_rights = no
+```
+
+---
+
+## 3. Identifiers [(Section 10)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#identifiers)
+
+### 3.1 Machine ID [(Section 10.3)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#machine-id)
+
+Edit the file [`/etc/machine-id`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/machine-id) and replace the current id to the Whonix ID:
+
+```
+b08dfa6083e7567a1921a715000001fb
+```
+
+---
+
+## 4. File Permissions [(Section 11)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#file-permissions)
+
+### 4.1. setuid / setgid Analysis [(Section 11.1)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#setuid)
+
+I Analyzed the output of `sudo find / -type f \( -perm -4000 -o -perm -2000 \)` on an standard Fedora installation, and I determined that all found setuid/setgid binaries were standard system utilities, helpers (PAM, Polkit, Xorg.wrap), or necessary components (sudo, fusermount3) and decided **not** to remove any setuid/setgid bits to avoid breaking system functionality.
+
+But if you install native apps instead of flatpak apps, maybe you should take a closer look at the output. But if you use all flatpak apps like me, you are okay and you can skip this ;)
+
+### 4.2. umask [(Section 11.2)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#umask)
+
+>[!WARNING]
+> I don't recommend doing this on Fedora, because it can make problems after updates. A problem that happened to me after upgrading from Fedora 40 to Fedora 41, is that the transition between dnf4 and dnf5 was not so clean, and [I had this problem](https://github.com/rpm-software-management/dnf5/issues/1908).
+> Also, if you use Snapper for system backups, a very strict umask can conflict with the capture of files and directories that Snapper does. Evaluate your needs, I personally change the umask because I assume the problems that can occur, but think if it is worth it for you.
+
+Create [`/etc/profile.d/umask.sh`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/profile.d/umask.sh) and add the following line for a more restrictive default umask (`077`) for newly created files.
+
+```bash
+umask 0077
+```
+>[!NOTE]
+> Some systems/shells might set umask elsewhere, e.g., `/etc/login.defs` for shadow-utils, or `/etc/fish/conf.d/umask.sh` for fish.
+
+---
+
+## 5. Core Dumps [(Section 12)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#core-dumps)
+
+### 5.1 Sysctl [(Section 12.1)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#core-dumps-sysctl)
+Disabled via `sysctl` (see [section 1.1](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide#1-1-sysctl-settings-section-2-2-https-madaidans-insecurities-github-io-guides-linux-hardening-html-sysctl-10-https-madaidans-insecurities-github-io-guides-linux-hardening-html-tcp-timestamps-12-https-madaidans-insecurities-github-io-guides-linux-hardening-html-core-dumps-sysctl-13-https-madaidans-insecurities-github-io-guides-linux-hardening-html-swap-16-https-madaidans-insecurities-github-io-guides-linux-hardening-html-ipv6-privacy): `kernel.core_pattern=|/bin/false` and `fs.suid_dumpable=0`).
+
+### 5.2 ulimit [(Section 12.3)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#core-dumps-ulimit)
+Edit [`/etc/security/limits.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/security/limits.conf) and add to the end of the file:
+```
+* soft core 0
+* hard core 0
+```
+
+---
+
+## 6. Swap [(Section 13)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#swap)
+
+Reduced swappiness via `sysctl` (see [section 1.1](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide#1-1-sysctl-settings-section-2-2-https-madaidans-insecurities-github-io-guides-linux-hardening-html-sysctl-10-https-madaidans-insecurities-github-io-guides-linux-hardening-html-tcp-timestamps-12-https-madaidans-insecurities-github-io-guides-linux-hardening-html-core-dumps-sysctl-13-https-madaidans-insecurities-github-io-guides-linux-hardening-html-swap-16-https-madaidans-insecurities-github-io-guides-linux-hardening-html-ipv6-privacy): `vm.swappiness=1`).
+
+---
+
+## 7. Partitioning and Mount Options [(Section 17)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#partitioning)
+
+Modified `/etc/fstab` to add `nosuid`, `nodev`, and `noexec` (where appropriate) to mount points. Used bind mounts for `/tmp` and `/var`.
+
+```fstab
+# Example hardened /etc/fstab (Adapt UUIDs and FS types)
+
+# ... (Root filesystem line) ...
+UUID=... /boot                   ext4    defaults,nosuid,nodev,noexec        1 2
+UUID=... /boot/efi               vfat    umask=0077,shortname=winnt,nosuid,nodev 0 2
+UUID=... /home                   btrfs   subvol=home,compress=zstd:1,nosuid,nodev 0 0 # noexec omitted for usability
+proc     /proc                   proc    nosuid,nodev,noexec,hidepid=2,gid=proc 0 0
+
+# Bind mounts for hardening /tmp and /var
+/tmp     /tmp  none  bind,nosuid,nodev,noexec 0 0
+/var     /var  none  bind,nosuid,nodev      0 0
+# Optional: Harden /var/tmp as well
+# /var/tmp /var/tmp none bind,nosuid,nodev,noexec 0 0
+```
+**Note:** `noexec` on `/home` was omitted for usability. Apply with `sudo systemctl daemon-reload` and reboot.
+
+---
+
+## 8. Editing Files as Root [(Section 19)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#editing-as-root)
+
+Try to avoid using kate, nano, any file editor as administrator, and use `sudoedit` for editing files. For changing the editor that `sudoedit` uses, add the following line to [`/etc/environment`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/environment). Log out and back in for changes to take effect.
+
+```
+EDITOR=nano # Or any editor, nano is an example.
+```
+
+---
+
+## 9. Physical Security [(Section 21)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#physical-security)
+
+### 9.1. GRUB Password [(Section 21.3.1)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#grub)
+
+1.  **Set Password:**
+* First, we need to install grub2-tools if you don't have it installed: `sudo dnf install grub2-tools-minimal`
+* Then, we create the password: `grub2-mkpasswd-pbkdf2` (If you want, you can add --iteration-count 500000 to the command to improve password security)
+* We copy the output of the command starting in "password_pbkdf2 (...)"
+* And we go to `/etc/grub.d/40_custom`, and paste this on the last line: 
+```
+set superusers="root" # You can edit the username to whatever you want
+password_pbkdf2 root grub.pbkdf2.sha512.10000.xxxxxxxxxxxxxx # Replace the password_pbkdf2 output with your correct one
+```
+* Regenerate GRUB config: `sudo grub2-mkconfig -o /etc/grub2.cfg` and it's done!
+
+2.  **Require Password for Boot:**
+*   Edit [`/etc/grub.d/10_linux`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/grub.d/10_linux) and remove `--unrestricted` from the `CLASS=` variable definition.
+*   Edit [`/etc/default/grub`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/default/grub) and set `GRUB_ENABLE_BLSCFG=false`.
+*   Regenerate GRUB config: `sudo grub2-mkconfig -o /etc/grub2.cfg`.
+
+This forces GRUB to ask for the password before booting any menu entry.
+
+### 9.2. USBGuard [(Section 21.5)](https://madaidans-insecurities.github.io/guides/linux-hardening.html#usbs)
+
+Implement a whitelist policy to block unauthorized USB devices.
+
+1.  **Install:** `sudo dnf install usbguard`
+2.  **Generate Initial Policy (Critical):**
+*   Connect **only** essential internal components (Laptop) or essential peripherals (Desktop: Keyboard, Mouse, required WiFi/BT adapters, required external drives).
+*   `sudo usbguard generate-policy > ~/initial_rules.conf`
+3.  **Review & Copy:** Review `~/initial_rules.conf` to ensure essential devices (internal hubs, webcam, BT, keyboard, mouse etc.) are present.
+*   `sudo cp ~/initial_rules.conf /etc/usbguard/rules.conf`
+4.  **Start & Enable:** `sudo systemctl start usbguard`
+*   **IMMEDIATELY TEST** essential peripherals (keyboard/mouse on Desktop).
+*   If all works okay, then you can enable the service: `sudo systemctl enable usbguard` 
+*   **If you can't use your keyboard or mouse**, force restart your system. As you didn't enabled usbguard service, it should not start when you boot your system again.
+*   On the worst cases, you can disable usbguard with a live os, like Fedora Installation Live OS.
+5.  **Whitelist Additional Devices:**
+*   Connect the new device (it will be blocked).
+*   `usbguard list-devices` (Note the blocked device ID).
+*   `usbguard list-devices -a -o <ID> | sudo tee -a /etc/usbguard/rules.conf` (Replace `<ID>`).
+*   `sudo systemctl restart usbguard`
+
+---
+
+## 10. Privacy Tweaks [(privsec.dev)](https://privsec.dev/posts/linux/desktop-linux-hardening/#privacy-tweaks)
+
+### 10.1. NetworkManager MAC Randomization, DHCP hardening and more [(privsec.dev)](https://privsec.dev/posts/linux/desktop-linux-hardening/#networkmanager-trackability-reduction)
+
+Create the file [`/etc/NetworkManager/conf.d/00-privacy.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/NetworkManager/conf.d/00-%E2%80%8Bprivacy.%E2%80%8Bconf) if not exists, and add the following:
+```
+[device]
+wifi.scan-rand-mac-address=yes
+
+[connection]
+ipv4.dhcp-send-hostname=false
+ipv6.dhcp-send-hostname=false
+ipv4.dhcp-timeout=30
+ipv4.dhcp-vendor-class-identifier=
+ipv4.dhcp-client-id=
+ipv6.dhcp-duid=stable-uuid
+wifi.cloned-mac-address=random
+ethernet.cloned-mac-address=random
+ethernet.wake-on-lan = ignore
+wifi.wake-on-wlan = ignore
+```
+
+Then, restart the NetworkManager service (`sudo systemctl restart NetworkManager`), or restart your system.
+And optionally, set your hostname to localhost: `sudo hostnamectl hostname "localhost"`
+
+### 10.2. DNF Configuration [(privsec.dev)](https://privsec.dev/posts/linux/desktop-linux-hardening/#system-counting)
+* Add the following to [`/etc/dnf/dnf.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide2/src/branch/main/etc/dnf/dnf.conf):
+```
+# see `man dnf.conf` for defaults and possible options
+
+[main]
+install_weak_deps=False
+countme=false
+```
+
+* And force the use of https repositories for more security:
+
+    Fedora: `sudo sed -i -- '/^metalink=/s/$/\&protocol=https/' /etc/yum.repos.d/fedora*.repo`
+
+    RPM Fusion: `sudo sed -i -- '/^metalink=/s/$/\&protocol=https/' /etc/yum.repos.d/rpmfusion*.repo`
+
+    And finally: `sudo dnf clean metadata`
+
+---
+
+## 11. NetworkManager Wi-Fi Hardening
+
+Alright, so after all that system-level stuff, let's harden our Wi-Fi connection. Even if it's your home network, I like to assume it *could* be hostile, We're gonna use `nmcli` to make a super-specific connection profile.
+
+
+```bash
+sudo nmcli connection add \
+    type wifi \
+    con-name "MySuperSecureWiFi" \
+    ifname wlp7s0f3u1 \
+    ssid "MySuperSecureWiFi" \
+    wifi.cloned-mac-address random \
+    wifi.band "bg" \
+    wifi.wake-on-wlan ignore \
+    wifi.bssid "XX:XX:XX:XX:XX:XX" \
+    wifi.powersave 2 \
+    wifi-sec.key-mgmt sae \
+    wifi-sec.pmf 3 \
+    wifi-sec.group "ccmp" \
+    wifi-sec.pairwise "ccmp" \
+    wifi-sec.proto "rsn" \
+    wifi-sec.psk "Password" \
+    wifi-sec.wps-method 0 \
+    wifi-sec.fils 0 \
+    ipv4.dns "9.9.9.9 149.112.112.112" \
+    ipv4.dhcp-reject-servers "169.254.0.0/16,127.0.0.0/8" \
+    ipv4.ignore-auto-dns yes \
+    ipv4.dhcp-send-hostname false \
+    ipv4.dhcp-client-id "" \
+    ipv4.dhcp-vendor-class-identifier "" \
+    ipv4.dhcp-timeout 30 \
+    ipv4.dns-options "trust-ad,edns0" \
+    ipv4.dns-priority 100 \
+    ipv4.may-fail no \
+    ipv4.link-local auto \
+    ipv6.method disabled \
+    ipv6.may-fail yes \
+    ipv6.ignore-auto-dns yes \
+    ipv6.ip6-privacy 2 \
+    ipv6.addr-gen-mode stable-privacy \
+    connection.mdns 0 \
+    connection.llmnr 0 \
+    connection.lldp 0 \
+    connection.mptcp-flags 0x1 \
+    connection.metered 0 \
+    connection.zone public \
+    connection.autoconnect no \
+    connection.autoconnect-priority 1 \
+    connection.auth-retries 2 \
+    connection.permissions "user:myusername"
+```
+
+If you want to see the explanation of all parameters, [look it here.](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/nmcli_explanation.md)
+[Fixme: Outdated explanation]
+
+> [!NOTE]
+> If you want to connect to a public wi-fi instead of a protected one, you have two ways:
+> 1) If the Wi-Fi supports OAE (Opportunistic Wireless Encryption): Put`wifi-sec.key-mgmt` to oae
+> 2) If the Wi-Fi doesn't have any security: Remove all `wifi-sec.*` properties, and change `wifi-sec.pmf` to 2, and it should work.
+
+> [!NOTE]
+> If you want to connect to a wpa-2 powered access point, change `wifi-sec.key-mgmt` to wpa-psk. Also you may change `wifi-sec.pmf` to 2, because probably that AP will not support PMF.
+
+> [!NOTE]
+> `wifi.band` has two values. "bg" to force 2.4GHz frequency, and "a" to force the 5GHz frequency.
+
+### 11.1 NetworkManager Ethernet Hardening (Fixme)
+
+If you are using ethernet to connect to your router, then we need to change some parameters and remove wi-fi specific stuff. The command will be like this:
+
+```
+sudo nmcli connection add \
+    type ethernet \
+    con-name "MySuperSecureEthernet" \
+    ifname eth0 \
+    ethernet.cloned-mac-address random \
+    ipv4.dhcp-send-hostname false \
+    ipv6.dhcp-send-hostname false \
+    ipv4.dhcp-client-id "" \
+    ipv4.dhcp-vendor-class-identifier "" \
+    ipv4.dhcp-timeout 30 \
+    ipv4.method manual \
+    ipv4.addresses "192.168.1.10/24" \
+    ipv4.gateway "192.168.1.1" \
+    connection.mdns 0 \
+    connection.llmnr 0 \
+    connection.lldp 0 \
+    connection.mptcp-flags 0x1 \
+    ipv6.ip6-privacy 2 \
+    ipv6.addr-gen-mode stable-privacy \
+    ipv4.dns "9.9.9.9 149.112.112.112" \
+    ipv4.ignore-auto-dns yes \
+    ipv4.may-fail no \
+    ipv6.may-fail yes \
+    ipv6.method disabled \
+    ipv6.ignore-auto-dns yes \
+    ipv6.ip6-privacy 2 \
+    ipv6.addr-gen-mode stable-privacy \
+    ethernet.wake-on-lan ignore \
+    ipv4.link-local 2 \
+    connection.metered 0 \
+    connection.zone public \
+    connection.permissions "user:myusername" \
+    connection.autoconnect yes \
+    connection.autoconnect-priority 1
+```
+
+### 11.2 Disabling Fast BSS Transition on wpa_supplicant [(explanation)](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/nmcli_explanation.md#echo-ieee80211r-0-sudo-tee-a-etc-wpa_supplicant-wpa_supplicant-conf)
+
+```bash
+echo 'ieee80211r=0' | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+### 11.3 Configuring Chronyd to ignore NTP servers provided by DHCP
+Go to [`/etc/chrony.conf`](https://codeberg.org/TwilightAlicorn/Fedora-Hardening-Guide/src/branch/main/etc/chrony.conf), and find this section of the file:
+
+```
+# Use NTP servers from DHCP.
+sourcedir /run/chrony-dhcp
+```
+
+Comment the line `sourcedir /run/chrony-dhcp` adding a hashtag at the beginning, and then restart chronyd (or your computer, it's the same) to apply the changes `sudo systemctl restart chronyd`.
+
+### 11.4 Disabling Connecivity Checks on NetworkManager [(Explanation, read note section)](https://wiki.archlinux.org/title/NetworkManager#Checking_connectivity)
+
+```
+echo -e "[connectivity]\nenabled=false" | sudo tee /etc/NetworkManager/conf.d/20-disable-connectivity-check.conf
+```
+
+---
+
+## 12. Removing OpenH264 [(source)](https://www.phoronix.com/news/Fedora-OpenH264-Security-Woe)
+The Cisco OpenH264 repository is not always up to date, and that is a security issue. I recommend not using OpenH264, and instead, use ffmpeg from RPM Fusion as an alternative.
+
+- So for uninstalling OpenH264, first disable the repository: `sudo sed -i 's/enabled=1/enabled=0/g' /etc/yum.repos.d/fedora-cisco-openh264.repo`
+- Then, clean dnf metadata: `sudo dnf clean all`
+- And lastly, do the swap: `sudo dnf swap '*openh264*' noopenh264 --no-best`
+
+The noopenh264 package is a stub that satisfies dependencies without including the potentially vulnerable Cisco codec, allowing RPM Fusion's ffmpeg to handle H.264 decoding.
+
+
+
 * LABEL=/boot     /boot     ext2     defaults,ro     1 2
 
 proc     /proc     proc     defaults,hidepid=2     0     0         # added by unknown on 2019-07-06 @ 06:49:51
