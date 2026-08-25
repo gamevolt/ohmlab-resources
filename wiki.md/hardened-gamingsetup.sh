@@ -13,7 +13,31 @@ YOU'VE BEEN WARNED
 
                                     N O T E S
  
+# 📜 Security Guide: Analyze the Threat Model
 
+## Table of Contents
+- [Analyze the Threat Model](#analyze-the-threat-model)
+- [Linux Files Hierarchy](#linux-files-hierarchy)
+- [Kernel Hardening](#kernel-hardening)
+  - [Sysctl Settings](#sysctl-settings)
+  - [Boot Parameters](#boot-parameters)
+
+---
+
+## 🔍 Analyze the Threat Model
+
+When approaching a system to secure, it's crucial to ask yourself a series of questions. Even if some of these questions seem trivial, simplifying the problem is essential for effective security.
+
+- [ ] Why do you want to secure your server and services?
+- [ ] How much security do you desire?
+- [ ] How many devices, apps, software, and databases need securing?
+- [ ] How much convenience are you willing to compromise for security? (People often prefer convenience over security.)
+- [ ] What threats do you want to protect against?
+- [ ] What are the specifics of your situation?
+- [ ] Is physical access to your server/network a possible attack vector?
+- [ ] Do you need to address known vulnerabilities in hardware, software, or libraries?
+- [ ] How are you hosting it? Is it accessible from the public?
+- [ ] Do you have a recovery plan if your security measures lock you out of your own server? (e.g., if you disabled root login or password-protected GRUB and deleted your SSH public key.)
 # randomize MAC address & disable static hostname
 sudo bash -c 'cat > /etc/NetworkManager/conf.d/00-macrandomize.conf' <<-'EOF'
 [main]
@@ -48,20 +72,6 @@ sudo systemctl mask NetworkManager-wait-online.service >/dev/null 2>&1
 sudo sed -i -e 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
 
 # ------------------------------------------------------------------------
-
-echo -e "Enable tmpfs ramdisk"
-sudo sed -i -e '/^\/\/tmpfs/d' /etc/fstab
-echo -e "tmpfs /var/tmp tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/log tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/run tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/lock tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/cache tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/volatile tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /var/spool tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /media tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /dev/shm tmpfs nodiratime,nodev,nosuid,mode=1777 0 0
-tmpfs /sys/fs/cgroup tmpfs nodiratime,nodev,nosuid,mode=1777 0 0" | sudo tee -a /etc/fstab
-
 # ------------------------------------------------------------------------
 
 
@@ -116,11 +126,6 @@ sudo systemctl disable brltty.service
 sudo systemctl --global disable brltty.service
 sudo systemctl disable brltty-udev.service
 sudo systemctl --global disable brltty-udev.service
-echo -e "Disable man-db service/timer"
-sudo systemctl disable man-db.service
-sudo systemctl --global disable man-db.service
-sudo systemctl disable man-db.timer
-sudo systemctl --global disable man-db.timer
 
 # ------------------------------------------------------------------------
 
@@ -169,6 +174,9 @@ fi
 ## Improve PCI latency
 sudo setpci -v -s '*:*' latency_timer=10 >/dev/null 2>&1
 sudo setpci -v -s '0:0' latency_timer=0 >/dev/null 2>&1
+
+
+
 
 echo -e "Compress fonts"
 woff2_compress /usr/share/fonts/opentype/*/*ttf
