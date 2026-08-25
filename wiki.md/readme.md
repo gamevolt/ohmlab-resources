@@ -1,0 +1,1 @@
+This folder is meant for work-in-progress files such as bash script, tweaks, configurations and other guidelines related stuff.
