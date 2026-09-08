@@ -1,0 +1,110 @@
+A beginners guide to video game piracy. modified by u/ManiacThat, adapted from the original from authors "scary" and "midnyte" with updated information.
+---------------------------------------
+**Please use the sites and tools from this megathread : https://rentry.org/pgames , as it contains what to and not to use for games. This pastebin only contains a few sites, and lots more are found inside the megathread.**
+
+Before we begin, here are some useful tools:
+
+uBlock Origin - The best ad & unwanted content blocker out there: https://ublockorigin.com/
+
+7-zip - for extracting files (.7z, .rar, .tar, .zip, etc.) - better than WinRar: https://www.7-zip.org/
+
+Jdownloader 2 - A download manager for downloading many files in bulk: https://jdownloader.org/jdownloader2
+
+qBitorrent - The best torrent client for personal use: https://www.qbittorrent.org/
+
+td.fastio.me - A tool for creating free google team drives: http://td.fastio.me/ (Always use an alt)
+
+------------------------------------------------------------------------------------------------------------
+
+Lets start with how to torrent:
+
+Torrenting is using the bittorent protocol to share files. The BitTorrent protocol is a p2p file sharing protocol, and it requires no server, it uses other people uploading for you to be able to download. Since Piracy is illegal and different countries have different torrenting laws you may need to check if you need a vpn to torrent files, the reason you need a vpn to torrent files and not to direct download, is because direct downloading is just you and the server, while in the BitTorrent protocol everyone can see your i.p. I will link to a great essay about this topic here:
+https://www.reddit.com/r/Piracy/comments/huwyfi/what_people_get_wrong_about_copyrights_vpns_and/
+
+---------------------------------------------------------------------------------------------------------------------------
+Setting up qBitorrent:
+
+1st of all, I would recommend binding your vpn to qBittorrent. You can do this by going to options > advanced > network interface and setting it to your vpn's interface.
+For torrenting, you might need a paid VPN. A good VPN to use is Mullvad. 
+You do not need a vpn for Direct downloads, for bypassing site restrictions, a DNS change or free VPN can suffice. 
+
+I would also recommend turning off rate limit to uTP protocol, you can do this in options > speed.
+
+This video is pretty good for setting up qBit: https://www.youtube.com/watch?v=do0y_Z_lPU0
+
+----------------------------------------------------------------------------------------------------------------------------
+
+Downloading torrents:
+
+If a torrent has more seeders, it will be faster 99% of the time, the seeders are normally the green number.
+
+I prefer .torrent files over magnet links because it skips the retrieval of metadata, but it is your choice.
+
+Start your vpn before starting download if needed.
+
+Magnet Links:
+(make sure to disable webtorrent on your browser if that is an option)
+On the site you are downloading from, there should be a magnet icon or a magnet download button, click the icon/button and if you have your torrent client installed, there should be a popup asking you what app you want to open this link with,Just click qBitorrent and check the box to always use qBitorrent to open magnet links. Choose your destination folder in qBitorrent and then the download should start! Make sure to seed and don't hit and run!
+
+.torrent files: 
+
+On the site you are downloading from there should be a "torrent download" or a button that looks like a file. Once you downloaded the .torrent file, you just open it with qBitorrent, choose your destination folder, and then the download should start! Make sure to seed and don't hit & run!
+----------------------------------------------------------------------------------------------------------------------------
+
+Types of Pirated Games you can download:
+
+Scene Releases - Scene Releases are the original way to download pirated games, they come straight from the scene and are normally in .iso format or packed into many .rar files.
+
+Repacks -  Repacks are Pirated Games that are compressed so that people with bad internet or people who don't like downloading more then they have to can download. These take time to install because of the decompression process needed to play the games.
+
+GOG Rips - GOG rips are games that are ripped from the drm-free game store GOG. These games require no crack and the install process is exactly the same as if you bought the game from GOG.
+
+Pre-Installed Games - Pre-Installed Games are pirated games that are installed on someone else's computer, then the game files are taken, compressed, then uploaded. These are the easiest to get started with imo.
+
+Scene Releases:
+
+Scene releases are the original way to download pirated games. They are in .iso format normally or they are seperated into many .rar files. You can find scene releases on many sites, but my go to is rarbg.to for torrenting and ovagames.com & steamrip.com for ddl. 
+
+gog-games (https://gog-games.to/) : Find the game you want with the search bar, click on the post with your game, then copy the filehoster links and paste them into Jdownloader2 by right click on the link grabber > add new link > paste the links. once the downloads are complete go to the destination folder, select all of the parts then right click > 7-zip > extract here, then run the setup & enjoy your game.
+
+ovagames (https://ovagames.com/) : Search for the game you would like on the top right, then click the post with your game. Scroll down a bit and click on the "link download" tab. Then choose your file hoster of choice, The best file hoster is google drive so always go for that if available. Once you click on your file hoster if choice it should bring you to a filecrypt.co link, for the captcha you have to click the circle that is not full. Then, you will see a list of parts, click on each part and download them all to the same folder. Once they are all downloaded, select them all and right click, then hover over 7-zip and click "extract here". Once it is done extracting, double click the iso to mount it, then run the setup. Then copy everything from inside the "scene group name eg; 'PLAZA' or "CODEX'" folder in the iso and paste it into the install directory. Then enjoy your game! (note, ovagames also hosts elamigos repacks, but I would recommend just downloading a repack from dodi/fitgirl instead.)
+
+SteamRIP (https://steamrip.com/) :
+Search for the game you want and click on the post with that game, scroll down and click the purple button that says "download"
+
+Click the download now button and cancel the download immediately (This is where a download manager like internet download manager comes in handy, but jdownloader works too.) then right click the "here" text and click copy link address. Then paste the link into idm or jdownloader, for idm just click add url at the top left and chose your file destination, then click start.
+For jdownloader click the linkgrabber tab, and right click on any empty space and click add new links, then paste the link and chose your file destination, then click start all downloads at the bottom right.
+
+After everything is done downloading, just install redists if needed, then run the executable & enjoy your game!
+
+---------------------------------------------------------------------------------------------------------------------------
+
+Repacks:
+
+Repacks are pirated games that are compressed for people with worse internet or people who don't want to download more than they have to. Some repackers I can recommend are Dodi, Fitgirl, and CPG.
+
+Dodi (https://dodi-repacks.site/) : Search for the game that you would like, then click the post with your game. If you're downloading with torrent, click the torrent button for your game and download the .torrent file from the file hoster, but if you would like to download from google drive click "gdrive" and go through the link shortener, then follow this guide https://telegra.ph/How-to-download-files-06-01 (Replace the pirated.me or drive.fitgirl-repacks.site with https://www.game-repack.site/drive/) 
+
+Once you have copied the files to your drive, download the files separately and to the same folder. Once they are downloaded select all the .rar files and right click > 7-zip > extract here. After they have been extracted you can run setup & enjoy your game!
+
+FitGirl (https://fitgirl-repacks.site/) : Search for your game in the top right search bar, then click the post with your game, then scroll down a bit to the "Download Mirrors" section. If you would like to torrent you can choose 1337x, rutor, and tapocheck and follow the torrent section. If you would like to direct download you can choose any of the file hosters, To download from google drive click the link that says "Uploaded by hermietkreeft" and use this guide to download https://telegra.ph/How-to-download-files-06-01
+(Replace the pirated.me or drive.fitgirl-repacks.site with hermietkreeft.site)(make sure you copy your language pack) 
+
+Once you have copied the files to your drive, download the files separately and to the same folder, Once they are all downloaded select all the .rar files and right click > 7-zip > extract here. After they are extracted, run the verify bin files executable to check if the files are all intact. After that run setup, check the 2gb ram limit if you have 8gb ram or under, and enjoy your game!
+
+CPG (https://cpgrepacks.site/) : Search for your game in the search bar on the right, click the post with your game, scroll down a bit and click the button/link that says "click here to visit=>Google Drive". After clicking on that a google drive windows should open, follow the prompts to download the .7z file (separately and to the same folder if multiple) then select all of the .7z files > right click > 7-zip > extract here. Then run setup & enjoy your game!
+
+WARNING: TURN OFF ANTIVIRUS WHILE INSTALLING REPACKS TO AVOID ERRORS.
+YOU CAN DELETE THE INSTALLATION FILES AFTER THE REPACK IS INSTALLED
+
+----------------------------------------------------------------------------------------------------------------------------
+
+CS.RIN.RU BROWSING GUIDE BY MIDNYTE
+
+Please visit this link for the guide on how to use cs.rin.
+
+https://gitlab.com/ZediAlreadyTaken/guides/-/blob/main/rin-guide.md
+
+Links:
+https://cs.rin.ru/
+----------------------------------------------------------------------------------------------------------------------------
