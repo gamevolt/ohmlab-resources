@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Use bubblewrap to run /bin/sh reusing the host OS binaries (/usr), but with
+# separate /tmp, /home, /var, /run, and /etc. For /etc we just inherit the
+# host's resolv.conf, and set up "stub" passwd/group files.  Not sharing
+# /home for example is intentional.  If you wanted to, you could design
+# a bwrap-using program that shared individual parts of /home, perhaps
+# public content.
+#
+# Another way to build on this example is to remove --share-net to disable
+# networking.
+set -euo pipefail
+
+declare -a EXTRA_ARGS
+
+# Networking
+EXTRA_ARGS+=(--ro-bind /etc/resolv.conf /etc/resolv.conf)
+EXTRA_ARGS+=(--ro-bind /etc/ssl /etc/ssl)
+EXTRA_ARGS+=(--ro-bind /etc/ca-certificates /etc/ca-certificates)
+
+# Audio
+EXTRA_ARGS+=(--ro-bind-try "$XDG_RUNTIME_DIR/pulse" "$XDG_RUNTIME_DIR/pulse")
+
+# Fonts
+EXTRA_ARGS+=(--ro-bind /etc/fonts /etc/fonts)
+EXTRA_ARGS+=(--ro-bind /usr/share/fontconfig /usr/share/fontconfig)
+
+# Add display server variables (remove if no GUI)
+if [ "${WAYLAND_DISPLAY:-}" != "" ]; then
+  EXTRA_ARGS+=(--setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY")
+  EXTRA_ARGS+=(--ro-bind "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY")
+elif [ "${DISPLAY:-}" != "" ]; then
+  XAUTH="$HOME/.Xauthority"
+  EXTRA_ARGS+=(--setenv DISPLAY "$DISPLAY")
+  EXTRA_ARGS+=(--ro-bind "$XAUTH" "$XAUTH")
+  EXTRA_ARGS+=(--ro-bind /tmp/.X11-unix/X0 /tmp/.X11-unix/X0)
+fi
+
+# TODO: Don't bind entire of /usr
+
+# SECCOMP
+SECCOMP=""
+
+if [ "$SECCOMP" != "" ]; then
+  EXTRA_ARGS+=(--seccomp 13)
+fi
+
+U=$(id -u)
+G=$(id -g)
+
+# Run
+(exec bwrap \
+      --ro-bind /usr /usr \
+      --dir /tmp \
+      --dir /var \
+      --symlink ../tmp var/tmp \
+      --proc /proc \
+      --dev /dev \
+      --tmpfs "$HOME" \
+      --symlink usr/lib /lib \
+      --symlink usr/lib64 /lib64 \
+      --symlink usr/bin /bin \
+      --symlink usr/sbin /sbin \
+      --dir "$XDG_RUNTIME_DIR" \
+      --unshare-user \
+      --disable-userns \
+      --assert-userns-disabled \
+      --unshare-pid \
+      --unshare-cgroup-try \
+      --unshare-uts \
+      --hostname localhost \
+      --die-with-parent \
+      --dir /run/user/$(id -u) \
+      --clearenv \
+      ${EXTRA_ARGS[@]} \
+      --setenv XDG_RUNTIME_DIR "XDG_RUNTIME_DIR" \
+      --setenv PS1 "bwrap$ " \
+      --setenv PATH "/bin:/usr/bin" \
+      --file 11 /etc/passwd \
+      --file 12 /etc/group \
+      program $@) \
+    11< <(getent passwd "$U" 65534) \
+    12< <(getent group "$G" 65534) \
+    13< <(printf "%s" "$SECCOMP" | base64 -d)
