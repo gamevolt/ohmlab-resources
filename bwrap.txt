@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly real_bwrap=/usr/bin/bwrap
+
+# Preserve ordinary utility invocations such as:
+#   bwrap --help
+#   bwrap --version
+#
+# Codex sandbox executions use `--` before the command.
+has_separator=false
+for arg in "$@"; do
+    if [[ "$arg" == "--" ]]; then
+        has_separator=true
+        break
+    fi
+done
+
+if [[ "$has_separator" != true ]]; then
+    exec "$real_bwrap" "$@"
+fi
+
+declare -a output=()
+injected=false
+
+inject_gpu_devices() {
+    local path
+
+    output+=(--ro-bind /sys /sys)
+
+    output+=(--perms 1777 --tmpfs /dev/shm)
+
+    # NVIDIA devices needed for NVML/CUDA.
+    for path in \
+        /dev/nvidiactl \
+        /dev/nvidia0 \
+        /dev/nvidia1 \
+        /dev/nvidia-uvm \
+        /dev/nvidia-uvm-tools \
+        /dev/nvidia-modeset \
+        /dev/nvidia-caps
+    do
+        [[ -e "$path" ]] || continue
+        output+=(--dev-bind "$path" "$path")
+    done
+
+    # Optional DRM render devices. Keep this when CUDA/OpenGL/Vulkan
+    # workloads may need them.
+    if [[ -d /dev/dri ]]; then
+        output+=(--dev-bind /dev/dri /dev/dri)
+    fi
+
+    # Optional AMD ROCm device. Unnecessary for NVIDIA-only systems.
+    if [[ -e /dev/kfd ]]; then
+        output+=(--dev-bind /dev/kfd /dev/kfd)
+    fi
+}
+
+for arg in "$@"; do
+    if [[ "$arg" == "--" && "$injected" == false ]]; then
+        inject_gpu_devices
+        injected=true
+    fi
+
+    output+=("$arg")
+done
+
+exec "$real_bwrap" "${output[@]}"
