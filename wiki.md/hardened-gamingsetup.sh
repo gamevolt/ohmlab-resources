@@ -74,6 +74,44 @@ sudo sed -i -e 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 
+# Service Hardening Script
+
+# Disable unnecessary services
+services_to_disable=(
+    "telnet"
+    "rsh"
+    "rlogin"
+    "vsftpd"
+    "httpd"  # If not needed
+    "smb"
+    "nfs"
+)
+
+echo "🔒 Hardening Services"
+for service in "${services_to_disable[@]}"; do
+    if systemctl is-enabled "$service" 2>/dev/null; then
+        echo "Disabling $service..."
+        sudo systemctl disable "$service"
+        sudo systemctl stop "$service"
+    fi
+done
+
+# Enable security-focused services
+security_services=(
+    "fail2ban"
+    "firewalld"
+    "auditd"
+)
+
+for service in "${security_services[@]}"; do
+    if systemctl list-unit-files | grep -q "$service"; then
+        echo "Enabling $service..."
+        sudo systemctl enable "$service"
+        sudo systemctl start "$service"
+    fi
+done
+
+echo "✅ Service hardening completed!"
 
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
