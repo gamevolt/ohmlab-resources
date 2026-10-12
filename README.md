@@ -1,24 +1,25 @@
 # resources
 
-  ###/ɡrimˈwär/
+### /ɡrimˈwär/
 
-  # 📜 collections of resources,data,scripts and files
+# 📜 collections of resources,data,scripts and files
 
-## 
+##
+
 W.I.P -- UNFINISHED
--- THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
-I MAY ADD THINGS FROM OTHER  LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
-YOU'VE BEEN WARNED 
+- - THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
+I MAY ADD THINGS FROM OTHER LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
+YOU'VE BEEN WARNED
 W.I.P
--- THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
-I MAY ADD THINGS FROM OTHER  LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
-YOU'VE BEEN WARNED 
+- - THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
+I MAY ADD THINGS FROM OTHER LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
+YOU'VE BEEN WARNED
 
 ```text
 =================================================================
- 
+
                                     N O T E S
- 
+
  ┌│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│┐
  │▓▓                                                                        ▓▓│
  │▓▓                                                                        ▓▓│
@@ -27,17 +28,17 @@ YOU'VE BEEN WARNED
                                     N O T E S
 ```
 
- 
 # 📜 Security Guide: Analyze the Threat Model
 
 ## Table of Contents
+
 - [Analyze the Threat Model](#analyze-the-threat-model)
 - [Linux Files Hierarchy](#linux-files-hierarchy)
 - [Kernel Hardening](#kernel-hardening)
   - [Sysctl Settings](#sysctl-settings)
   - [Boot Parameters](#boot-parameters)
 
----
+- --
 
 ## 🔍 Analyze the Threat Model
 
@@ -53,6 +54,7 @@ When approaching a system to secure, it's crucial to ask yourself a series of qu
 - [ ] Do you need to address known vulnerabilities in hardware, software, or libraries?
 - [ ] How are you hosting it? Is it accessible from the public?
 - [ ] Do you have a recovery plan if your security measures lock you out of your own server? (e.g., if you disabled root login or password-protected GRUB and deleted your SSH public key.)
+
 # randomize MAC address & disable static hostname
 
 ```text
@@ -95,6 +97,7 @@ sudo systemctl mask NetworkManager-wait-online.service >/dev/null 2>&1
 ```
 
 # ------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------
 
 ## Don't autostart .desktop
@@ -105,6 +108,7 @@ sudo sed -i -e 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
 ```
 
 # ------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------
 
 ```text
@@ -150,6 +154,7 @@ echo "✅ Service hardening completed!"
 ```
 
 # ------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------
 
 ```text
@@ -237,10 +242,10 @@ sudo systemctl enable NetworkManager-dispatcher.service
 sudo systemctl --global enable NetworkManager-dispatcher.service
 ```
 
-**security and hardening options for systemd service units**
-------------------------------------------------------------
+## **security and hardening options for systemd service units**
 
 A common and reliable pattern in service unit files is thus:
+
 ```
 NoNewPrivileges=yes
 PrivateTmp=yes
@@ -444,8 +449,6 @@ sudo setpci -v -s '*:*' latency_timer=10 >/dev/null 2>&1
 sudo setpci -v -s '0:0' latency_timer=0 >/dev/null 2>&1
 ```
 
-
-
 ```text
 
 echo -e "Compress fonts"
@@ -458,7 +461,9 @@ gtk-update-icon-cache
 ```
 
 # Acknowledgements
- recommendations from these sources:
+
+recommendations from these sources:
+
 - [madaidan's Linux Hardening Guide](https://madaidans-insecurities.github.io/guides/linux-hardening.html) - the initial inspiration for this project
 - [Arch Wiki](https://wiki.archlinux.org/title/Security)
 - [Red Hat Enterprise Linux 9 Security Hardening Documentations](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/index)
@@ -469,22 +474,27 @@ gtk-update-icon-cache
 - [Tommy's Desktop Linux Hardening Guide](https://privsec.dev/posts/linux/desktop-linux-hardening/)
 
 # Introductory resources
+
 If you're relatively new to the infosec (information security) world, then the following resources come recommended:
 
 🎥 **YouTube channels**
+
 - [NBTV, with Naomi Brockwell](https://www.youtube.com/@NaomiBrockwellTV)
 - [The New Oil](https://www.youtube.com/channel/UCH5DsMZAgdx5Fkk9wwMNwCA)
 - [Side of Burritos](https://www.youtube.com/@sideofburritos)
 - [Techlore](https://www.youtube.com/@techlore)
 
 🎧 **Podcasts**
+
 - [Malwarebytes Podcast](https://www.malwarebytes.com/blog/category/podcast)
 - [Surveillance Report](https://surveillancereport.tech/)
 
 👀 **Websites & guides**
+
 - [National Cyber Security Centre (UK)](https://www.ncsc.gov.uk/section/advice-guidance/all-topics)
 - [The New Oil](https://thenewoil.org/)
 - [Privacy Guides](https://www.privacyguides.org/en/)
 
----
+- --
+
 ## 🗂️ ---
