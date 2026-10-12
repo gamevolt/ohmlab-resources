@@ -379,3 +379,31 @@ woff2_compress /usr/share/fonts/truetype/*/*ttf
 fc-cache -rfv
 ## Optimize icon cache
 gtk-update-icon-cache
+# Acknowledgements
+ recommendations from these sources:
+- [madaidan's Linux Hardening Guide](https://madaidans-insecurities.github.io/guides/linux-hardening.html) - the initial inspiration for this project
+- [Arch Wiki](https://wiki.archlinux.org/title/Security)
+- [Red Hat Enterprise Linux 9 Security Hardening Documentations](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/index)
+- [Center for Internet Security's Red Hat Benchmark](https://www.cisecurity.org/benchmark/red_hat_linux)
+- [OpenSCAP](https://github.com/ComplianceAsCode/content)
+- [OpenSCAP Fedora Guide](https://static.open-scap.org/ssg-guides/ssg-fedora-guide-index.html)
+- [k-config-hardened-check](https://github.com/a13xp0p0v/kconfig-hardened-check/)
+- [Tommy's Desktop Linux Hardening Guide](https://privsec.dev/posts/linux/desktop-linux-hardening/)
+
+# Introductory resources
+If you're relatively new to the infosec (information security) world, then the following resources come recommended:
+
+🎥 **YouTube channels**
+- [NBTV, with Naomi Brockwell](https://www.youtube.com/@NaomiBrockwellTV)
+- [The New Oil](https://www.youtube.com/channel/UCH5DsMZAgdx5Fkk9wwMNwCA)
+- [Side of Burritos](https://www.youtube.com/@sideofburritos)
+- [Techlore](https://www.youtube.com/@techlore)
+
+🎧 **Podcasts**
+- [Malwarebytes Podcast](https://www.malwarebytes.com/blog/category/podcast)
+- [Surveillance Report](https://surveillancereport.tech/)
+
+👀 **Websites & guides**
+- [National Cyber Security Centre (UK)](https://www.ncsc.gov.uk/section/advice-guidance/all-topics)
+- [The New Oil](https://thenewoil.org/)
+- [Privacy Guides](https://www.privacyguides.org/en/)
