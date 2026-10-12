@@ -13,6 +13,8 @@ W.I.P
 -- THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
 I MAY ADD THINGS FROM OTHER  LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
 YOU'VE BEEN WARNED 
+
+```text
 =================================================================
  
                                     N O T E S
@@ -23,6 +25,8 @@ YOU'VE BEEN WARNED
  └│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│┘
 
                                     N O T E S
+```
+
  
 # 📜 Security Guide: Analyze the Threat Model
 
@@ -50,6 +54,8 @@ When approaching a system to secure, it's crucial to ask yourself a series of qu
 - [ ] How are you hosting it? Is it accessible from the public?
 - [ ] Do you have a recovery plan if your security measures lock you out of your own server? (e.g., if you disabled root login or password-protected GRUB and deleted your SSH public key.)
 # randomize MAC address & disable static hostname
+
+```text
 sudo bash -c 'cat > /etc/NetworkManager/conf.d/00-macrandomize.conf' <<-'EOF'
 [main]
 hostname-mode=none
@@ -61,29 +67,47 @@ wifi.scan-rand-mac-address=yes
 wifi.cloned-mac-address=random
 ethernet.cloned-mac-address=random
 EOF
+```
 
+```text
 sudo systemctl restart NetworkManager
 sudo hostnamectl hostname "localhost"
 
+```
+
 ## Set realtime to unlimited
+
+```text
 echo -e "@realtime - rtprio 99
 @realtime - memlock unlimited" | sudo tee -a /etc/security/limits.conf
 
+```
+
 # ------------------------------------------------------------------------
+
+```text
 
 echo -e "Disable wait online service"
 echo -e "[connectivity]
 enabled=false" | sudo tee /etc/NetworkManager/conf.d/20-connectivity.conf
 sudo systemctl mask NetworkManager-wait-online.service >/dev/null 2>&1
 
+```
+
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 
 ## Don't autostart .desktop
+
+```text
 sudo sed -i -e 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
+
+```
 
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
+
+```text
 
 # Service Hardening Script
 
@@ -123,22 +147,31 @@ for service in "${security_services[@]}"; do
 done
 
 echo "✅ Service hardening completed!"
+```
 
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
+
+```text
 
 echo -e "Disable systemd-timesync daemon"
 sudo systemctl disable systemd-timesyncd.service
 sudo system
+```
+
 # ------------------------------------------------------------------------
 
+```text
 echo -e "Disable bluetooth autostart"
 sudo sed -i -e 's/AutoEnable.*/AutoEnable = false/' /etc/bluetooth/main.conf
 sudo sed -i -e 's/FastConnectable.*/FastConnectable = false/' /etc/bluetooth/main.conf
 sudo sed -i -e 's/ReconnectAttempts.*/ReconnectAttempts = 1/' /etc/bluetooth/main.conf
 sudo sed -i -e 's/ReconnectIntervals.*/ReconnectIntervals = 1/' /etc/bluetooth/main.conf
+```
 
 # ------------------------------------------------------------------------
+
+```text
 
 echo -e "Disable systemd radio service/socket"
 sudo systemctl disable systemd-rfkill.service
@@ -175,23 +208,35 @@ sudo systemctl disable brltty.service
 sudo systemctl --global disable brltty.service
 sudo systemctl disable brltty-udev.service
 sudo systemctl --global disable brltty-udev.service
+```
 
 # ------------------------------------------------------------------------
 
 ## Fix connecting local devices
+
+```text
 sudo sed -i -e 's/hosts: .*/hosts: files mdns4_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns mdns4 mdns/' /etc/nsswitch.conf
+
+```
 
 # ------------------------------------------------------------------------
 
+```text
 echo -e "Reduce systemd timeout"
 sudo sed -i -e 's/#DefaultTimeoutStartSec.*/DefaultTimeoutStartSec=5s/g' /etc/systemd/system.conf
 sudo sed -i -e 's/#DefaultTimeoutStopSec.*/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
 
+```
+
 # ------------------------------------------------------------------------
+
+```text
 
 echo -e "Enable NetworkManager dispatcher"
 sudo systemctl enable NetworkManager-dispatcher.service
 sudo systemctl --global enable NetworkManager-dispatcher.service
+```
+
 **security and hardening options for systemd service units**
 ------------------------------------------------------------
 
@@ -213,6 +258,8 @@ RestrictSUIDSGID=yes
 MemoryDenyWriteExecute=yes
 LockPersonality=yes
 ```
+
+```text
 
 But there's so much more you can do. Here are some key option definitions which I've excerpted and abbreviated from systemd's manual pages.
 
@@ -349,39 +396,57 @@ Takes a SMACK64 security label as argument. The process executed by the unit wil
 * [SystemCallFilter](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#SystemCallFilter=)
 
 Takes a space-separated list of system call names. If this setting is used, all system calls executed by the unit processes except for the listed ones will result in immediate process termination with the SIGSYS signal (whitelisting). If the first character of the list is "~", the effect is inverted: only the listed system calls will result in immediate process termination (blacklisting). Blacklisted system calls and system call groups may optionally be suffixed with a colon (":") and "errno" error number (between 0 and 4095) or errno name such as `EPERM`, `EACCES` or `EUCLEAN` (see [errno](http://man7.org/linux/man-pages/man3/errno.3.html) for a full list).
+```
+
 # ------------------------------------------------------------------------
 
+```text
 echo -e "Disable systemd avahi daemon service"
 sudo systemctl disable avahi-daemon.service
 sudo systemctl --global disable avahi-daemon.service
+```
 
 # ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 
 ## Flush bluetooth
+
+```text
 sudo rm -rfd /var/lib/bluetooth/*
+
+```
 
 #
 
 # ------------------------------------------------------------------------
 
 echo -e "Disable remote-fs"
+
+```text
 sudo systemctl mask remote-fs.target >/dev/null 2>&1
 
+```
+
+```text
 ## Improve NVME
 if $(find /sys/block/nvme[0-9]* | grep -q nvme); then
     echo -e "options nvme_core default_ps_max_latency_us=0" | sudo tee /etc/modprobe.d/nvme.conf
 fi
+```
 
 # ------------------------------------------------------------------------
 
 ## Improve PCI latency
+
+```text
 sudo setpci -v -s '*:*' latency_timer=10 >/dev/null 2>&1
 sudo setpci -v -s '0:0' latency_timer=0 >/dev/null 2>&1
+```
 
 
 
+```text
 
 echo -e "Compress fonts"
 woff2_compress /usr/share/fonts/opentype/*/*ttf
@@ -390,6 +455,8 @@ woff2_compress /usr/share/fonts/truetype/*/*ttf
 fc-cache -rfv
 ## Optimize icon cache
 gtk-update-icon-cache
+```
+
 # Acknowledgements
  recommendations from these sources:
 - [madaidan's Linux Hardening Guide](https://madaidans-insecurities.github.io/guides/linux-hardening.html) - the initial inspiration for this project
