@@ -5,6 +5,13 @@
 # 📜 collections of resources,data,scripts and files
 
 ##
+# grimwär
+
+> **⚠️ WORK IN PROGRESS — UNFINISHED**  
+> This repository is a placeholder. DO NOT run scripts blindly — you will likely break your setup.  
+> Scripts may contain outdated code from previous bash files. Proceed with caution.
+
+## Collections of Resources, Data, Scripts and Files
 
 W.I.P -- UNFINISHED
 - - THIS SCRIPT IS FAR FROM FINISHED AND IS USED AS A PLACEHOLDER AT THE MOMENT, DO NOT RUN BLINDLY - YOU WILL MOST LIKELY BREAK YOUR SETUP SINCE
@@ -15,45 +22,24 @@ W.I.P
 I MAY ADD THINGS FROM OTHER LEFT OVER BASH SCRIPTS I PREVIOUSLY WROTE WHICH ARE HEAVILY OUTDATED NOW.
 YOU'VE BEEN WARNED
 
-```text
+```
 =================================================================
 
                                     N O T E S
 
  ┌│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│┐
- │▓▓                                                                        ▓▓│
- │▓▓                                                                        ▓▓│
+ │▓▓                              `/ɡrimˈwär/`                              ▓▓│
+ │▓▓                               ohmlab.net                               ▓▓│
  └│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│┘
 
-                                    N O T E S
 ```
-
-
-
-Here's a reformatted version optimized for GitHub README.md:
-
-```markdown
-# grimwär
-
-`/ɡrimˈwär/`
-
-> **⚠️ WORK IN PROGRESS — UNFINISHED**  
-> This repository is a placeholder. DO NOT run scripts blindly — you will likely break your setup.  
-> Scripts may contain outdated code from previous bash files. Proceed with caution.
-
-## Collections of Resources, Data, Scripts and Files
-
----
-
 ## Table of Contents
 
-- [Security Guide: Analyze the Threat Model](#security-guide-analyze-the-threat-model)
-- [Linux Files Hierarchy](#linux-files-hierarchy)
-- [Kernel Hardening](#kernel-hardening)
+- [gamingenv.sh: bash script to apply env variable from steam launch option](#gamingenv.sh)
+- [placeholdmepl0x](#placeholder)
+- [Lorem  Ipsum](#loremipsum)
   - [Sysctl Settings](#sysctl-settings)
   - [Boot Parameters](#boot-parameters)
-- [Network Configuration](#network-configuration)
-- [Service Hardening](#service-hardening)
 - [Gaming Optimizations](#gaming-optimizations)
   - [Steam Launch Options](#steam-launch-options)
   - [Engine.ini Config](#engineini-config)
@@ -61,7 +47,13 @@ Here's a reformatted version optimized for GitHub README.md:
 - [System Tweaks](#system-tweaks)
 - [Additional Resources](#additional-resources)
 
----
+
+```
+
+
+## gamingenv.sh
+
+
 
 ## 🔍 Security Guide: Analyze the Threat Model
 
@@ -181,6 +173,11 @@ sudo systemctl disable systemd-timesyncd.service
 # Disable bluetooth autostart
 sudo sed -i -e 's/AutoEnable.*/AutoEnable = false/' /etc/bluetooth/main.conf
 sudo sed -i -e 's/FastConnectable.*/FastConnectable = false/' /etc/bluetooth/main.conf
+mkdir -p /etc/systemd/system/user-.slice.d
+write /etc/systemd/system/user-.slice.d/io.conf \
+"[Slice]
+IOWeight=1000"
+
 
 # Disable rfkill
 sudo systemctl disable systemd-rfkill.service --global
@@ -195,14 +192,27 @@ sudo systemctl disable speech-dispatcher --global
 # Disable smartmontools
 sudo systemctl disable smartmontools --global
 
-# Disable kernel oops
-sudo systemctl disable kerneloops.service --global
-
-# Disable whoopsie
-sudo systemctl disable whoopsie.service --global
-
 # Disable avahi
 sudo systemctl disable avahi-daemon.service --global
+
+
+# Serial ports ttyS0-3 (saves 4.8s)
+sudo systemctl mask serial-getty@ttyS0.service
+sudo systemctl mask serial-getty@ttyS1.service
+sudo systemctl mask serial-getty@ttyS2.service
+sudo systemctl mask serial-getty@ttyS3.service
+echo "[OK] Serial ports masked"
+
+# Disable unused services
+sudo systemctl disable systemd-hwdb-update.service 2>/dev/null
+sudo systemctl disable accounts-daemon.service 2>/dev/null
+sudo systemctl disable avahi-daemon.service 2>/dev/null
+sudo systemctl disable cups.service 2>/dev/null
+sudo systemctl disable cups-browsed.service 2>/dev/null
+sudo systemctl disable geoclue.service 2>/dev/null
+sudo systemctl disable power-profiles-daemon.service 2>/dev/null
+sudo systemctl disable switcheroo-control.service 2>/dev/null
+
 
 # Flush bluetooth
 sudo rm -rfd /var/lib/bluetooth/*
