@@ -128,51 +128,17 @@ echo -e "@realtime - rtprio 99
 sudo sed -i -e 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
 ```
 
-### Disable Unnecessary Services
-
-```bash
-#!/bin/bash
-# Service Hardening Script
-
-services_to_disable=(
-    "telnet"
-    "rsh"
-    "rlogin"
-    "vsftpd"
-    "httpd"
-    "smb"
-    "nfs"
-)
-
-echo "🔒 Hardening Services"
-for service in "${services_to_disable[@]}"; do
-    if systemctl is-enabled "$service" 2>/dev/null; then
-        echo "Disabling $service..."
-        sudo systemctl disable "$service"
-        sudo systemctl stop "$service"
-    fi
-done
-
-security_services=("fail2ban" "firewalld" "auditd")
-
-for service in "${security_services[@]}"; do
-    if systemctl list-unit-files | grep -q "$service"; then
-        echo "Enabling $service..."
-        sudo systemctl enable "$service"
-        sudo systemctl start "$service"
-    fi
-done
-```
-
 ### Additional Service Disables
 
-```bash
+```
 # Disable systemd-timesync daemon
 sudo systemctl disable systemd-timesyncd.service
 
 # Disable bluetooth autostart
 sudo sed -i -e 's/AutoEnable.*/AutoEnable = false/' /etc/bluetooth/main.conf
 sudo sed -i -e 's/FastConnectable.*/FastConnectable = false/' /etc/bluetooth/main.conf
+
+
 mkdir -p /etc/systemd/system/user-.slice.d
 write /etc/systemd/system/user-.slice.d/io.conf \
 "[Slice]
