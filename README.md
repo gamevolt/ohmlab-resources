@@ -1,5 +1,5 @@
 # resources
-
+THE README IS CURRENTLY A PLACE HOLDER AS I ORGANIZE THIS REPO -- THIS IS MEANT FOR STORING RESOURCES WHILE BUILDING + ORGANIZING 
 ### /ɡrimˈwär/
 
 # 📜 collections of resources,data,scripts and files
