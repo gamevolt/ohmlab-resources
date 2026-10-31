@@ -547,6 +547,50 @@ LockPersonality=yes
 ```
 
 ```
+Terminal
+Tool	Source
+Kitty	sw.kovidgoyal.net/kitty
+Fish	fishshell.com
+ble.sh	github.com/akinomyoga/ble.sh
+Starship	starship.rs
+Zoxide	github.com/ajeetdsouza/zoxide
+Lazygit	github.com/jesseduffield/lazygit
+Yazi	github.com/sxyazi/yazi
+mise	mise.jdx.dev
+fzf	github.com/junegunn/fzf
+ripgrep	github.com/BurntSushi/ripgrep
+bat	github.com/sharkdp/bat
+eza	github.com/eza-community/eza
+JetBrainsMono NF	github.com/ryanoasis/nerd-fonts
+Rice / Desktop
+Tool	Source
+Conky	github.com/brndnmtthws/conky
+Kvantum	github.com/tsujan/Kvantum
+Layan KDE	github.com/vinceliuice/Layan-kde
+Panel Colorizer	github.com/luisbocanegra/plasma-panel-colorizer
+Wallpaper	Made for this repo, no third-party source; covered by the MIT license like the rest of it
+Gaming
+Tool	Source
+Steam	store.steampowered.com
+ProtonUp-Qt	github.com/DavidoTek/ProtonUp-Qt
+Heroic Games Launcher	heroicgameslauncher.com
+Lutris	lutris.net
+Bottles	usebottles.com
+Prism Launcher	prismlauncher.org
+GOverlay	github.com/benjamimgois/goverlay
+EasyEffects	github.com/wwmm/easyeffects
+MangoHud	github.com/flightlessmango/MangoHud
+GameMode	github.com/FeralInteractive/gamemode
+Gamescope	github.com/ValveSoftware/gamescope
+Gaming Guides
+Guide	Source
+Linux Gaming Optimization	github.com/theyareonit/linux-gaming-optimization
+Linux Gaming Guide (AdelKS)	github.com/AdelKS/LinuxGamingGuide
+Linux Gaming Wiki	linux-gaming.kwindu.eu
+Security
+Tool	Source
+kernel-hardening-checker	github.com/a13xp0p0v/kernel-hardening-checker
+
 
 # Acknowledgements
 
