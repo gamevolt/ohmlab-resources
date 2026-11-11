@@ -55,22 +55,6 @@ YOU'VE BEEN WARNED
 ## gamingenv.sh
 
 
-
-## 🔍 Security Guide: Analyze the Threat Model
-
-When approaching a system to secure, it's crucial to ask yourself the following questions:
-
-- Why do you want to secure your server and services?
-- How much security do you desire?
-- How many devices, apps, software, and databases need securing?
-- How much convenience are you willing to compromise for security? *(People often prefer convenience over security.)*
-- What threats do you want to protect against?
-- What are the specifics of your situation?
-- Is physical access to your server/network a possible attack vector?
-- Do you need to address known vulnerabilities in hardware, software, or libraries?
-- How are you hosting it? Is it accessible from the public?
-- Do you have a recovery plan if your security measures lock you out? *(e.g., disabled root login or SSH keys)*
-
 ---
 
 ## 📡 Network Configuration
@@ -121,28 +105,6 @@ echo -e "@realtime - rtprio 99
 
 ---
 
-## 🛡️ Service Hardening
-### Security Options for Systemd Services
-
-Common service hardening pattern:
-
-```ini
-NoNewPrivileges=yes
-PrivateTmp=yes
-PrivateDevices=yes
-DevicePolicy=closed
-ProtectSystem=strict
-ProtectHome=read-only
-ProtectControlGroups=yes
-ProtectKernelModules=yes
-ProtectKernelTunables=yes
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
-RestrictNamespaces=yes
-RestrictRealtime=yes
-RestrictSUIDSGID=yes
-MemoryDenyWriteExecute=yes
-LockPersonality=yes
-```
 
 Key options explained:
 
