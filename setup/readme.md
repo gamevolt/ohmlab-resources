@@ -1,13 +1,13 @@
-#TODO W.I.P sudo setcap cap_sys_nice+ep "$(which gamescope)"
-
+#TODO W.I.P ```sudo setcap cap_sys_nice+ep "$(which gamescope)"```
+```
 mkdir -p /etc/systemd/system/user-.slice.d write /etc/systemd/system/user-.slice.d/io.conf
-"[Slice] IOWeight=1000"
+"[Slice] IOWeight=1000"```
 
 ── Systemd user drop-ins: cap RAM on the heaviest background services ─────────
 These sit in the user service manager cgroup and prevent baloo / akonadi
 from quietly consuming hundreds of MB while a game is running.
 Users who need more headroom for mail/search can raise these in their own
-~/.config/systemd/user/ overrides.
+```~/.config/systemd/user/ overrides.
 mkdir -p /etc/systemd/user
 
 for svc_dir in
@@ -17,9 +17,9 @@ for svc_dir in
 "evolution-data-server.service.d"
 "tracker-miner-fs-3.service.d"
 "kactivitymanagerd.service.d"
-"kwalletd6.service.d" do mkdir -p "/etc/systemd/user/${svc_dir}" done
+"kwalletd6.service.d" do mkdir -p "/etc/systemd/user/${svc_dir}" done```
 
-cat << 'DROP' > /etc/systemd/user/baloo_file.service.d/ohmlab-memcap.conf
+```cat << 'DROP' > /etc/systemd/user/baloo_file.service.d/ohmlab-memcap.conf```
 
 ohmlab OS: hard cap on Baloo file indexer
 Default: unbounded. During peak indexing it can exceed 400 MB.
@@ -29,36 +29,36 @@ cat << 'DROP' > /etc/systemd/user/akonadiserver.service.d/ohmlab-memcap.conf
 
 ohmlab OS: hard cap on Akonadi PIM server
 Most ohmlab users don't use KDE PIM; cap prevents runaway growth.
-[Service] MemoryHigh=128M MemoryMax=256M DROP
+```[Service] MemoryHigh=128M MemoryMax=256M DROP
 
 cat << 'DROP' > /etc/systemd/user/kdeconnectd.service.d/ohmlab-memcap.conf [Service] MemoryHigh=48M MemoryMax=96M DROP
 
 cat << 'DROP' > /etc/systemd/user/evolution-data-server.service.d/ohmlab-memcap.conf [Service] MemoryHigh=64M MemoryMax=128M DROP
 
-cat << 'DROP' > /etc/systemd/user/tracker-miner-fs-3.service.d/ohmlab-memcap.conf
+cat << 'DROP' > /etc/systemd/user/tracker-miner-fs-3.service.d/ohmlab-memcap.conf```
 
 tracker-miner-fs-3 (GNOME file tracker) — may not exist on KDE but harmless if so.
-[Service] MemoryHigh=48M MemoryMax=96M DROP
+```[Service] MemoryHigh=48M MemoryMax=96M DROP
 
 cat << 'DROP' > /etc/systemd/user/kactivitymanagerd.service.d/ohmlab-memcap.conf
-
+```
 Activity tracking daemon — most users never use KDE Activities, but it
 runs by default and its SQLite usage-tracking DB grows over time.
-[Service] MemoryHigh=48M MemoryMax=96M DROP
+```[Service] MemoryHigh=48M MemoryMax=96M DROP
 
 cat << 'DROP' > /etc/systemd/user/kwalletd6.service.d/ohmlab-memcap.conf
-
+```
 KWallet password manager daemon — cap to 48 MB; rarely needs more.
 [Service] MemoryHigh=48M MemoryMax=96M DROP
 
 NetworkManager-wait-online (saves 5.1s)
-sudo systemctl disable NetworkManager-wait-online.service echo "[OK] NetworkManager-wait-online disabled"
+```sudo systemctl disable NetworkManager-wait-online.service echo "[OK] NetworkManager-wait-online disabled"```
 
 Serial ports ttyS0-3 (saves 4.8s)
-sudo systemctl mask serial-getty@ttyS0.service sudo systemctl mask serial-getty@ttyS1.service sudo systemctl mask serial-getty@ttyS2.service sudo systemctl mask serial-getty@ttyS3.service echo "[OK] Serial ports masked"
+```sudo systemctl mask serial-getty@ttyS0.service sudo systemctl mask serial-getty@ttyS1.service sudo systemctl mask serial-getty@ttyS2.service sudo systemctl mask serial-getty@ttyS3.service echo "[OK] Serial ports masked"```
 
 Disable unused services
-sudo systemctl disable systemd-hwdb-update.service 2>/dev/null sudo systemctl disable avahi-daemon.service 2>/dev/null sudo systemctl disable cups.service 2>/dev/null sudo systemctl disable cups-browsed.service 2>/dev/null sudo systemctl disable geoclue.service 2>/dev/null sudo systemctl disable power-profiles-daemon.service 2>/dev/null cat << 'NETSYSCTL' > /etc/sysctl.d/91-ohmlab-network.conf
+```sudo systemctl disable systemd-hwdb-update.service 2>/dev/null sudo systemctl disable avahi-daemon.service 2>/dev/null sudo systemctl disable cups.service 2>/dev/null sudo systemctl disable cups-browsed.service 2>/dev/null sudo systemctl disable geoclue.service 2>/dev/null sudo systemctl disable power-profiles-daemon.service 2>/dev/null cat << 'NETSYSCTL' > /etc/sysctl.d/91-ohmlab-network.conf```
 
 ohmlab OS: network gaming optimisation
 net.core.rmem_max = 134217728 net.core.wmem_max = 134217728 net.core.rmem_default = 262144 net.core.wmem_default = 262144 net.ipv4.tcp_rmem = 4096 262144 134217728 net.ipv4.tcp_wmem = 4096 262144 134217728 net.ipv4.udp_rmem_min = 8192 net.ipv4.udp_wmem_min = 8192 net.core.default_qdisc = cake net.ipv4.tcp_congestion_control = bbr net.ipv4.tcp_fastopen = 3 net.ipv4.tcp_tw_reuse = 1 net.ipv4.tcp_fin_timeout = 15 net.ipv4.tcp_max_tw_buckets = 1440000 net.ipv4.tcp_slow_start_after_idle = 0 net.ipv4.tcp_no_metrics_save = 1 net.core.netdev_max_backlog = 50000 net.core.netdev_budget = 600 net.core.netdev_budget_usecs = 8000 net.core.somaxconn = 65535 net.ipv4.neigh.default.gc_thresh1 = 4096 net.ipv4.neigh.default.gc_thresh2 = 8192 net.ipv4.neigh.default.gc_thresh3 = 16384 net.ipv4.ip_local_port_range = 1024 65535
